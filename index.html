@@ -259,7 +259,7 @@
   @keyframes rise{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
   @media (prefers-reduced-motion: reduce){.bubble{animation:none;}}
 
-  .bubble.user{
+  .bubble.attacker{
     align-self:flex-end;
     background:var(--user-bg);
     border:1px solid var(--line);
@@ -309,8 +309,6 @@
   ::-webkit-scrollbar-thumb{background:var(--line);border-radius:5px;}
   ::-webkit-scrollbar-track{background:transparent;}
 </style>
-</head>
-<body>
 
 <div class="wrap">
 
@@ -470,15 +468,22 @@
   const speedSel = document.getElementById('speedSel');
   const tabs = document.querySelectorAll('.tab');
 
+  // idx counts revealed MESSAGES, not rounds: each round is 2 steps
+  // (attacker message, then defender message).
+  function totalSteps(){ return CASES[activeCase].rounds.length * 2; }
+  function roundsRevealed(){ return Math.floor(idx / 2); }
+
   function buildTraj(){
     trajDots.innerHTML = '';
+    const revealed = roundsRevealed();
+    const currentRoundIdx = Math.min(Math.ceil(idx / 2) - 1, CASES[activeCase].rounds.length - 1);
     CASES[activeCase].rounds.forEach((r, i) => {
       const d = document.createElement('button');
-      d.className = 'traj-dot ' + (i < idx ? 'visited' : (i === idx ? '' : 'future'));
-      if (i === idx - 1) d.classList.add('current');
+      d.className = 'traj-dot ' + (i < revealed ? 'visited' : (i === currentRoundIdx ? '' : 'future'));
+      if (i === currentRoundIdx) d.classList.add('current');
       d.textContent = r.n;
       d.title = 'Round ' + r.n + ' — ' + r.strategy;
-      d.addEventListener('click', () => { idx = i + 1; render(); });
+      d.addEventListener('click', () => { idx = (i + 1) * 2; render(); });
       trajDots.appendChild(d);
     });
   }
@@ -492,7 +497,10 @@
       hint.textContent = 'Press Play, or Step →, to begin the replay.';
       transcriptEl.appendChild(hint);
     } else {
-      for (let i = 0; i < idx; i++){
+      const fullRounds = Math.floor(idx / 2);
+      const hasPendingDefender = idx % 2 === 1;
+
+      for (let i = 0; i < fullRounds + (hasPendingDefender ? 1 : 0); i++){
         const r = data.rounds[i];
 
         const marker = document.createElement('div');
@@ -501,27 +509,28 @@
           '<span class="strategy-pill">' + r.strategy + '</span>';
         transcriptEl.appendChild(marker);
 
-        const u = document.createElement('div');
-        u.className = 'bubble user';
-        u.innerHTML = '<span class="who">User</span>' + r.user;
-        transcriptEl.appendChild(u);
+        const a = document.createElement('div');
+        a.className = 'bubble attacker';
+        a.innerHTML = '<span class="who">Attacker</span>' + r.user;
+        transcriptEl.appendChild(a);
 
-        const d = document.createElement('div');
-        d.className = 'bubble defender' + (r.defender.length < 6 ? ' short' : '');
-        d.innerHTML = '<span class="who">Defender · Qwen3-8B</span>' + r.defender;
-        transcriptEl.appendChild(d);
+        if (i < fullRounds){
+          const d = document.createElement('div');
+          d.className = 'bubble defender' + (r.defender.length < 6 ? ' short' : '');
+          d.innerHTML = '<span class="who">Defender · Qwen3-8B</span>' + r.defender;
+          transcriptEl.appendChild(d);
+        }
       }
     }
-    progressLabel.textContent = 'Round ' + idx + ' / ' + data.rounds.length;
-    stepBtn.disabled = idx >= data.rounds.length;
-    if (idx >= data.rounds.length){ stopPlaying(); }
+    progressLabel.textContent = 'Round ' + roundsRevealed() + ' / ' + data.rounds.length;
+    stepBtn.disabled = idx >= totalSteps();
+    if (idx >= totalSteps()){ stopPlaying(); }
     buildTraj();
     transcriptEl.scrollTop = transcriptEl.scrollHeight;
   }
 
   function step(){
-    const data = CASES[activeCase];
-    if (idx < data.rounds.length){ idx++; render(); }
+    if (idx < totalSteps()){ idx++; render(); }
   }
 
   function stopPlaying(){
@@ -531,12 +540,12 @@
   }
 
   function startPlaying(){
-    if (idx >= CASES[activeCase].rounds.length) idx = 0;
+    if (idx >= totalSteps()) idx = 0;
     playing = true;
     playBtn.textContent = '⏸ Pause';
     timer = setInterval(() => {
       step();
-      if (idx >= CASES[activeCase].rounds.length) stopPlaying();
+      if (idx >= totalSteps()) stopPlaying();
     }, parseInt(speedSel.value, 10));
   }
 
@@ -559,5 +568,6 @@
   render();
 })();
 </script>
+
 </body>
 </html>
