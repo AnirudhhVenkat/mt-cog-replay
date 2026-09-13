@@ -258,6 +258,7 @@
   }
   @keyframes rise{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
   @media (prefers-reduced-motion: reduce){.bubble{animation:none;}}
+  .bubble.no-anim{animation:none;}
 
   .bubble.attacker{
     align-self:flex-end;
@@ -522,6 +523,11 @@
         }
       }
     }
+    // Only the newest bubble should play its entrance animation — every
+    // earlier bubble was just rebuilt from scratch, not newly added.
+    const bubbles = transcriptEl.querySelectorAll('.bubble');
+    bubbles.forEach((b, i) => { if (i < bubbles.length - 1) b.classList.add('no-anim'); });
+
     progressLabel.textContent = 'Round ' + roundsRevealed() + ' / ' + data.rounds.length;
     stepBtn.disabled = idx >= totalSteps();
     if (idx >= totalSteps()){ stopPlaying(); }
