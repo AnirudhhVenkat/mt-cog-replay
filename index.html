@@ -423,8 +423,8 @@
     </div>
     <div class="stat-row">
       <div class="stat"><span class="n">2</span><span class="l">trajectories</span></div>
-      <div class="stat"><span class="n">gpt_combined</span><span class="l">source variant</span></div>
-      <div class="stat"><span class="n">0.810</span><span class="l">variant test AUROC</span></div>
+      <div class="stat"><span class="n">GPT judge</span><span class="l">safety labels from</span></div>
+      <div class="stat"><span class="n">0.810</span><span class="l">test AUROC</span></div>
     </div>
   </div>
 
@@ -481,8 +481,9 @@
     Analytics Platform" at round 10 and elaborates on it as real by round 11. TRACES' score already reads
     0.77 by round 3 and 0.96 by round 4 — flagging the trajectory roughly seven rounds before the
     fabrication appears in the transcript. Scores come from the trained model's actual output on the
-    held-out test split (<code>gpt_combined</code>, test AUROC 0.810); round 12 has no score in the eval
-    output for either trajectory, since only the first 11 defender turns were audited. Dialogue below is
+    held-out test split, trained against safety labels from a <b>GPT judge</b> (test AUROC 0.810); round
+    12 has no score in the eval output for either trajectory, since only the first 11 defender turns
+    were audited. Dialogue below is
     condensed from the model's full responses for readability — highlights mark the phrases that carry
     the round's meaning.
   </div>
